@@ -1,0 +1,15 @@
+{
+    "Name": "snakebids2dicom - Convert 3D niftis to dicom",
+    "BIDSVersion": "1.4.0",
+    "DatasetType": "derivative",
+    "GeneratedBy": [
+        {
+            "Name": "snakebids2dicom",
+            "Version": "0.1.0",
+            "CodeURL": "http://github.com/tkkuehn/snakebids2dicom",
+            "Author": "Tristan Kuehn",
+            "AuthorEmail": "tkuehn@uwo.ca"
+ 
+        }
+    ]
+}

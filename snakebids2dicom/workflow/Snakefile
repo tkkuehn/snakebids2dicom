@@ -1,0 +1,91 @@
+import snakebids
+from snakebids import bids
+
+configfile: "config/snakebids.yml"
+
+snakebids.generate_inputs_config(config)
+
+wildcard_constraints: **snakebids.get_wildcard_constraints(config)
+
+print('config["input_path"]["T1map"]: {}'.format(config["input_path"]["T1map"]))
+
+rule all:
+    input:
+        [dynamic(
+            "{}/{{dicom_frame}}.dcm".format(bids_file)) for bids_file in
+                expand(
+                    bids(
+                        root="dicom",
+                        datatype="anat",
+                        acq="{acq}",
+                        suffix="T1map",
+                        **config["subj_wildcards"]
+                    ),
+                    zip,
+                    **config["input_zip_lists"]["T1map"],
+                    allow_missing=True
+                )],
+        [dynamic(
+            "{}/{{dicom_frame}}.dcm".format(bids_file)) for bids_file in
+                expand(
+                    bids(
+                        root="dicom",
+                        datatype="anat",
+                        acq="{acq}",
+                        suffix="T2map",
+                        **config["subj_wildcards"]
+                    ),
+                    zip,
+                    **config["input_zip_lists"]["T2map"],
+                    allow_missing=True
+                )]
+
+# Having a separate rule for T1 maps and T2 maps is a little awkward, but 
+# Snakebids doesn't seem to handle suffixes as wildcards very well.
+rule nifti2dicom_t1:
+    input:
+        config["input_path"]["T1map"]
+    output:
+        dynamic(
+            "{}/{{dicom_frame}}.dcm".format(
+                bids(
+                    root="dicom",
+                    datatype="anat",
+                    acq="{acq}",
+                    suffix="T1map",
+                    **config["subj_wildcards"]
+                )
+            )
+        )
+    container:
+        "docker://tristankk/nifti2dicom:0.4.11"
+    shell:
+        "nifti2dicom -i {{input}} -o {} -y --studyinstanceuid {{config[studyinstanceuid]}} --patientname {{config[patientname]}}".format(bids(root="dicom", datatype="anat", acq="{wildcards.acq}", subject="{wildcards.subject}", session="{wildcards.session}", suffix="T1map"))
+
+rule nifti2dicom_t2:
+    input:
+        config["input_path"]["T2map"]
+    output:
+        dynamic(
+            "{}/{{dicom_frame}}.dcm".format(
+                bids(
+                    root="dicom",
+                    datatype="anat",
+                    acq="{acq}",
+                    suffix="T2map",
+                    **config["subj_wildcards"]
+                )
+            )
+        )
+    container:
+        "docker://tristankk/nifti2dicom:0.4.11"
+    shell:
+        "nifti2dicom -i {{input}} -o {} -y --studyinstanceuid {{config[studyinstanceuid]}} --patientname {{config[patientname]}}".format(bids(root="dicom", datatype="anat", acq="{wildcards.acq}", subject="{wildcards.subject}", session="{wildcards.session}", suffix="T2map"))
+
+rule push_to_orthanc:
+    input:
+        "dicom/{base_name}/N2D_{num}.dcm"
+    output:
+        touch("results/{base_name}_{num}_pushed.done")
+    shell:
+        "curl -X POST {config[orthancurl]}/instances --data-binary @{input} -u {config[orthancusername]}:{config[orthancpassword]} -vf"
