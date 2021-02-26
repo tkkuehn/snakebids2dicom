@@ -42,7 +42,7 @@ pybids_inputs:
     wildcards:
     - subject
     - session
-    - acquisition  
+    - acquisition
 
 #configuration for the command-line parameters to make available
 # passed on the argparse add_argument()

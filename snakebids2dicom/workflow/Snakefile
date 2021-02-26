@@ -7,38 +7,30 @@ snakebids.generate_inputs_config(config)
 
 wildcard_constraints: **snakebids.get_wildcard_constraints(config)
 
-print('config["input_path"]["T1map"]: {}'.format(config["input_path"]["T1map"]))
-
 rule all:
     input:
-        [dynamic(
-            "{}/{{dicom_frame}}.dcm".format(bids_file)) for bids_file in
-                expand(
-                    bids(
-                        root="dicom",
-                        datatype="anat",
-                        acq="{acq}",
-                        suffix="T1map",
-                        **config["subj_wildcards"]
-                    ),
-                    zip,
-                    **config["input_zip_lists"]["T1map"],
-                    allow_missing=True
-                )],
-        [dynamic(
-            "{}/{{dicom_frame}}.dcm".format(bids_file)) for bids_file in
-                expand(
-                    bids(
-                        root="dicom",
-                        datatype="anat",
-                        acq="{acq}",
-                        suffix="T2map",
-                        **config["subj_wildcards"]
-                    ),
-                    zip,
-                    **config["input_zip_lists"]["T2map"],
-                    allow_missing=True
-                )]
+        expand(
+            bids(
+                root="dicom",
+                datatype="anat",
+                acq="{acq}",
+                suffix="T1map",
+                **config["subj_wildcards"]
+            ),
+            zip,
+            **config["input_zip_lists"]["T1map"],
+        ),
+        expand(
+            bids(
+                root="dicom",
+                datatype="anat",
+                acq="{acq}",
+                suffix="T2map",
+                **config["subj_wildcards"]
+            ),
+            zip,
+            **config["input_zip_lists"]["T2map"],
+        )
 
 # Having a separate rule for T1 maps and T2 maps is a little awkward, but 
 # Snakebids doesn't seem to handle suffixes as wildcards very well.
@@ -46,15 +38,13 @@ rule nifti2dicom_t1:
     input:
         config["input_path"]["T1map"]
     output:
-        dynamic(
-            "{}/{{dicom_frame}}.dcm".format(
-                bids(
-                    root="dicom",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T1map",
-                    **config["subj_wildcards"]
-                )
+        directory(
+            bids(
+                root="dicom",
+                datatype="anat",
+                acq="{acq}",
+                suffix="T1map",
+                **config["subj_wildcards"]
             )
         )
     container:
@@ -66,15 +56,13 @@ rule nifti2dicom_t2:
     input:
         config["input_path"]["T2map"]
     output:
-        dynamic(
-            "{}/{{dicom_frame}}.dcm".format(
-                bids(
-                    root="dicom",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T2map",
-                    **config["subj_wildcards"]
-                )
+        directory(
+            bids(
+                root="dicom",
+                datatype="anat",
+                acq="{acq}",
+                suffix="T2map",
+                **config["subj_wildcards"]
             )
         )
     container:
