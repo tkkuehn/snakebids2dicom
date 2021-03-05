@@ -85,6 +85,13 @@ parse_args:
     default: False
     nargs: '+'
 
+  # Custom command-line params
+
+  --push_to_orthanc:
+    help: 'Flag to push the result dicoms to a configured Orthanc server.'
+    action: 'store_true'
+    default: False
+
 #--- workflow specific configuration -- below is just an example:
 
 #singularity containers
