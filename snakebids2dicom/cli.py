@@ -5,12 +5,22 @@
 import os
 import sys
 from snakebids.app import SnakeBidsApp
+import boutiques.creator as bc
 
 
 def get_parser():
     """Exposes parser for sphinx doc generation, cwd is the docs dir"""
     app = SnakeBidsApp('../snakebids2dicom', skip_parse_args=True)
     return app.parser
+
+
+def gen_boutiques(out_path="boutiques_descriptor.json"):
+    """Generates boutiques descriptor for Snakebids-specific CLI."""
+    new_descriptor = bc.CreateDescriptor(
+        get_parser(),
+        execname="snakebids2dicom"
+    )
+    new_descriptor.save(out_path)
 
 
 def main():
