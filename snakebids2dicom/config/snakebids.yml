@@ -21,28 +21,18 @@ targets_by_analysis_level:
 #    https://bids-standard.github.io/pybids/generated/bids.layout.BIDSLayout.html#bids.layout.BIDSLayout.get
 
 pybids_inputs:
-  T1map:
+  scan:
     filters:
       datatype: anat
-      extension: .nii
+      extension: .nii.gz
       invalid_filters: allow
       scope: raw
-      suffix: T1map
     wildcards:
     - subject
     - session
     - acquisition
-  T2map:
-    filters:
-      datatype: anat
-      extension: .nii
-      invalid_filters: allow
-      scope: raw
-      suffix: T2map
-    wildcards:
-    - subject
-    - session
-    - acquisition
+    - suffix
+
 
 #configuration for the command-line parameters to make available
 # passed on the argparse add_argument()
@@ -86,7 +76,15 @@ parse_args:
     nargs: '+'
 
   # Custom command-line params
-
+  --studyinstanceuid:
+    help: 'studyinstanceuid'
+  --orthancurl:
+    help: 'URL for orthanc dicom server' 
+  --orthancusername:
+    help: 'Username for orthanc dicom server' 
+  --orthancpassword:
+    help: 'Password for orthanc dicom server' 
+  
   --push_to_orthanc:
     help: 'Flag to push the result dicoms to a configured Orthanc server.'
     action: 'store_true'

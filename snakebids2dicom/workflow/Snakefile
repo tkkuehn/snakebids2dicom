@@ -1,11 +1,22 @@
+
 import snakebids
 from snakebids import bids
 
-configfile: "config/snakebids.yml"
 
-snakebids.generate_inputs_config(config)
+configfile: 'config/snakebids.yml'
 
-wildcard_constraints: **snakebids.get_wildcard_constraints(config)
+#writes inputs_config.yml and updates config dict
+config.update(snakebids.generate_inputs(bids_dir=config['bids_dir'],
+                            pybids_inputs=config['pybids_inputs'],
+                            derivatives=config['derivatives'],
+                            participant_label=config['participant_label'],
+                            exclude_participant_label=config['exclude_participant_label']))
+
+
+#this adds constraints to the bids naming
+wildcard_constraints:  **snakebids.get_wildcard_constraints(config['pybids_inputs'])
+
+
 
 def get_all_input():
     if config["push_to_orthanc"]:
@@ -13,69 +24,38 @@ def get_all_input():
             "t1": expand(
                 bids(
                     root="orthanc_push",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T1map.done",
-                    **config["subj_wildcards"]
+                    desc="done",
+                    **config["input_wildcards"]["scan"],
                 ),
                 zip,
-                **config["input_zip_lists"]["T1map"]
+                **config["input_zip_lists"]["scan"]
             ),
-            "t2": expand(
-                bids(
-                    root="orthanc_push",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T2map.done",
-                    **config["subj_wildcards"]
-                ),
-                zip,
-                **config["input_zip_lists"]["T2map"]
-            )
-        }
+          }
     else:
         return {
             "t1": expand(
                 bids(
                     root="dicom",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T1map",
-                    **config["subj_wildcards"]
+                    **config["input_wildcards"]["scan"],
                 ),
                 zip,
-                **config["input_zip_lists"]["T1map"],
+                **config["input_zip_lists"]["scan"],
             ),
-            "t2": expand(
-                bids(
-                    root="dicom",
-                    datatype="anat",
-                    acq="{acq}",
-                    suffix="T2map",
-                    **config["subj_wildcards"]
-                ),
-                zip,
-                **config["input_zip_lists"]["T2map"],
-            )
-        }
+       }
+
 
 rule all:
     input:
         **get_all_input()
 
-# Having a separate rule for T1 maps and T2 maps is a little awkward, but 
-# Snakebids doesn't seem to handle suffixes as wildcards very well.
-rule nifti2dicom_t1:
+rule nifti2dicom:
     input:
-        config["input_path"]["T1map"]
+        config["input_path"]["scan"]
     output:
         directory(
             bids(
                 root="dicom",
-                datatype="anat",
-                acq="{acq}",
-                suffix="T1map",
-                **config["subj_wildcards"]
+                **config["input_wildcards"]["scan"],
             )
         )
     container:
@@ -83,64 +63,21 @@ rule nifti2dicom_t1:
     shell:
         "nifti2dicom -i {input} -o {output} -y --studyinstanceuid {config[studyinstanceuid]} --patientname {wildcards.subject}"
 
-rule nifti2dicom_t2:
-    input:
-        config["input_path"]["T2map"]
-    output:
-        directory(
-            bids(
-                root="dicom",
-                datatype="anat",
-                acq="{acq}",
-                suffix="T2map",
-                **config["subj_wildcards"]
-            )
-        )
-    container:
-        "docker://tristankk/nifti2dicom:0.4.11"
-    shell:
-        "nifti2dicom -i {input} -o {output} -y --studyinstanceuid {config[studyinstanceuid]} --patientname {wildcards.subject}"
-
-rule push_to_orthanc_t1:
+rule push_to_orthanc:
     input:
         bids(
             root="dicom",
-            datatype="anat",
-            acq="{acq}",
-            suffix="T1map",
-            **config["subj_wildcards"]
+            **config["input_wildcards"]["scan"],
         )
     output:
         touch(
             bids(
                 root="orthanc_push",
-                datatype="anat",
-                acq="{acq}",
-                suffix="T1map.done",
-                **config["subj_wildcards"]
+                desc="done",
+                **config["input_wildcards"]["scan"],
             )
         )
     script:
         "scripts/push_dicoms_to_orthanc.py"
 
-rule push_to_orthanc_t2:
-    input:
-        bids(
-            root="dicom",
-            datatype="anat",
-            acq="{acq}",
-            suffix="T2map",
-            **config["subj_wildcards"]
-        )
-    output:
-        touch(
-            bids(
-                root="orthanc_push",
-                datatype="anat",
-                acq="{acq}",
-                suffix="T2map.done",
-                **config["subj_wildcards"]
-            )
-        )
-    script:
-        "scripts/push_dicoms_to_orthanc.py"
+
