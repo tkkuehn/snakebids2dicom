@@ -11,7 +11,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['snakebids @ git+https://github.com/akhanf/snakebids.git@90b8a14bb4245e7a69d25745062848bef7a6182a',
-                    pydicom ]
+                'pydicom' ]
 
 setup_requirements = [ ]
 
