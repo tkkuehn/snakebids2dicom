@@ -48,9 +48,19 @@ rule all:
     input:
         **get_all_input()
 
+
+def get_studyinstanceuid(wildcards):
+    
+    from pydicom.uid import generate_uid
+    #generate unique uid based on subj wildcards (ie unique for subject/session)
+    generate_uid(entropy_srcs=config['subj_wildcards'].keys())
+
+
 rule nifti2dicom:
     input:
         config["input_path"]["scan"]
+    params:
+        studyinstanceuid = get_studyinstanceuid
     output:
         directory(
             bids(
@@ -61,7 +71,7 @@ rule nifti2dicom:
     container:
         "docker://tristankk/nifti2dicom:0.4.11"
     shell:
-        "nifti2dicom -i {input} -o {output} -y --studyinstanceuid {config[studyinstanceuid]} --patientname {wildcards.subject}"
+        "nifti2dicom -i {input} -o {output} -y --studyinstanceuid {params.studyinstanceuid} --patientname {wildcards.subject}"
 
 rule push_to_orthanc:
     input:

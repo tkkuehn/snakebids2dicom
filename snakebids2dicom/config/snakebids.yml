@@ -76,8 +76,6 @@ parse_args:
     nargs: '+'
 
   # Custom command-line params
-  --studyinstanceuid:
-    help: 'studyinstanceuid'
   --orthancurl:
     help: 'URL for orthanc dicom server' 
   --orthancusername:
