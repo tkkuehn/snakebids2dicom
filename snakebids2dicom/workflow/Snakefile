@@ -21,7 +21,7 @@ wildcard_constraints:  **snakebids.get_wildcard_constraints(config['pybids_input
 def get_all_input():
     if config["push_to_orthanc"]:
         return {
-            "t1": expand(
+            "scan": expand(
                 bids(
                     root="orthanc_push",
                     desc="done",
@@ -33,7 +33,7 @@ def get_all_input():
           }
     else:
         return {
-            "t1": expand(
+            "scan": expand(
                 bids(
                     root="dicom",
                     **config["input_wildcards"]["scan"],
