@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['snakebids @ git+https://github.com/akhanf/snakebids.git@suffix_wildcard',
+requirements = ['snakebids==0.3.0',
                 'pydicom' ]
 
 setup_requirements = [ ]
